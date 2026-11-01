@@ -11,8 +11,8 @@ PID_FILE="$CLAUDE_DIR/discord-presence.pid"
 LOG_FILE="$CLAUDE_DIR/discord-presence.log"
 SESSIONS_DIR="$CLAUDE_DIR/discord-presence-sessions"
 REFCOUNT_FILE="$CLAUDE_DIR/discord-presence.refcount" # replaced by SESSIONS_DIR on Windows
-REPO="tsanva/cc-discord-presence"
-VERSION="v1.0.6"
+REPO="FnDXueyi/cc-discord-presence"
+VERSION="v1.1.0"
 STALE_MINUTES=720
 
 # Hook input: JSON from Claude Code on stdin; none when run by hand
