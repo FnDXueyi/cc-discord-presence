@@ -571,6 +571,80 @@ func TestUpdatePresenceWhileDiscordIsAway(t *testing.T) {
 	}
 }
 
+func TestRotateIntervalFromEnv(t *testing.T) {
+	tests := []struct {
+		value string
+		want  time.Duration
+	}{
+		{"", DefaultRotateInterval},
+		{"30", 30 * time.Second},
+		{"2", MinRotateInterval}, // faster than Discord's rate limit allows
+		{"0", DefaultRotateInterval},
+		{"-5", DefaultRotateInterval},
+		{"ten", DefaultRotateInterval},
+		{"1.5", DefaultRotateInterval},
+	}
+	for _, tt := range tests {
+		if got := rotateIntervalFromEnv(tt.value); got != tt.want {
+			t.Errorf("rotateIntervalFromEnv(%q) = %v, want %v", tt.value, got, tt.want)
+		}
+	}
+}
+
+func TestImageAtCyclesThroughEveryImage(t *testing.T) {
+	origInterval := rotateInterval
+	defer func() { rotateInterval = origInterval }()
+	rotateInterval = 15 * time.Second
+
+	start := time.Unix(1_800_000_000, 0) // a multiple of 15 s
+	if got, want := imageAt(start.Add(14*time.Second)), imageAt(start); got != want {
+		t.Errorf("image changed within one interval: %v, then %v", want, got)
+	}
+
+	seen := map[string]bool{}
+	for i := range cardImages {
+		seen[imageAt(start.Add(time.Duration(i)*rotateInterval)).File] = true
+	}
+	if len(seen) != len(cardImages) {
+		t.Errorf("one full cycle showed %d of %d images", len(seen), len(cardImages))
+	}
+
+	cycle := time.Duration(len(cardImages)) * rotateInterval
+	if got, want := imageAt(start.Add(cycle)), imageAt(start); got != want {
+		t.Errorf("rotation didn't wrap around: %v after a full cycle, want %v", got, want)
+	}
+}
+
+// The card text often stays the same for minutes (an idle session, a long
+// tool call), so the next image has to be sent on its own.
+func TestUpdatePresenceSendsNextImage(t *testing.T) {
+	origClient, origLast, origClock, origInterval := discordClient, lastPresence, clock, rotateInterval
+	defer func() {
+		discordClient, lastPresence, clock, rotateInterval = origClient, origLast, origClock, origInterval
+	}()
+	discordClient = discord.NewClient("test")
+	lastPresence = ""
+	rotateInterval = 15 * time.Second
+	now := time.Unix(1_800_000_000, 0)
+	clock = func() time.Time { return now }
+	session := &SessionData{ProjectName: "kadens", ModelName: "Opus 5.5", StartTime: now}
+
+	updatePresence(session)
+	first := lastPresence
+	if !strings.Contains(first, imageAt(now).File) {
+		t.Fatalf("card doesn't carry the current image (lastPresence %q)", first)
+	}
+
+	now = now.Add(rotateInterval)
+	updatePresence(session)
+	if lastPresence == first {
+		t.Error("same session text after one interval wasn't sent again with the next image")
+	}
+	if !strings.Contains(lastPresence, imageAt(now).File) {
+		t.Errorf("card doesn't carry the next image (lastPresence %q)", lastPresence)
+	}
+}
+
 // Transcripts hold lines of several megabytes (large tool results). A
 // bufio.Scanner stops at its buffer limit and the rest of the file was
 // silently ignored, so the card showed an old model and token count.

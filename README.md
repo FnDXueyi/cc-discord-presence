@@ -25,6 +25,7 @@ Show your Claude Code session on Discord! Display your current project, git bran
 - **Model Name** - Shows which Claude model you're using (Opus 4.5, Sonnet 4.5, Haiku 4.5)
 - **Context Size** - Tokens in Claude's context window right now (cached tokens included)
 - **Total Cost** - Real-time cost tracking for your session
+- **Rotating Clawd** - The card's picture cycles through five Clawd images (see [Rotating images](#rotating-images))
 
 ## Installation
 
@@ -32,7 +33,7 @@ Show your Claude Code session on Discord! Display your current project, git bran
 
 ```bash
 # Add the marketplace
-claude plugin marketplace add tsanva/cc-discord-presence
+claude plugin marketplace add FnDXueyi/cc-discord-presence
 
 # Install the plugin
 claude plugin install cc-discord-presence@cc-discord-presence
@@ -55,13 +56,29 @@ Then start a new Claude Code session. The plugin's start script notices that the
 
 ```bash
 # Clone and build
-git clone https://github.com/tsanva/cc-discord-presence.git
+git clone https://github.com/FnDXueyi/cc-discord-presence.git
 cd cc-discord-presence
 go build -o cc-discord-presence .
 
 # Run manually
 ./cc-discord-presence
 ```
+
+## Rotating Images
+
+The card's large image cycles through the Clawd pictures in [`assets/clawd/`](assets/clawd/): working, coffee, cooking, headphones and wizard. Each picture has its own hover text. A picture stays on the card for 15 seconds. To change that, set `CC_DISCORD_ROTATE_SECONDS` in `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CC_DISCORD_ROTATE_SECONDS": "30"
+  }
+}
+```
+
+The minimum is 5 seconds. Discord limits how often an app can update its activity, and shorter intervals would delay the text updates. The daemon reads the setting when it starts, so start a new Claude Code session after you change it.
+
+Discord shows external images only from a URL. The pictures are therefore served from this repository's `main` branch (`raw.githubusercontent.com`). To change a picture, replace the file in `assets/clawd/`, or edit `cardImages` in `main.go`, and push to `main`. Discord caches each image, so a replaced file can take a while to show up.
 
 ## How It Works
 

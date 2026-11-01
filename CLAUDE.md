@@ -98,7 +98,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Key points:
 ## Configuration
 
 - Client ID `1455326944060248250` is hardcoded (shared "Clawd Code" Discord app)
-- App icon set in Discord Developer Portal (used automatically for Rich Presence)
+- App icon set in Discord Developer Portal (Discord shows it when an activity has no large image)
+- The large image rotates through `cardImages` in `main.go`, served from `assets/clawd/` on this fork's `main` branch (`ImageBaseURL`); the image is chosen from the clock (`imageAt`), and the regular poll sends it when it changes. `CC_DISCORD_ROTATE_SECONDS` sets the interval (default 15 s, minimum 5 s because of Discord's rate limit on activity updates)
 
 ## Important Notes
 

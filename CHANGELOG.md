@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-02
+
+Released from the [FnDXueyi fork](https://github.com/FnDXueyi/cc-discord-presence). It includes the fixes from [#8](https://github.com/tsanva/cc-discord-presence/pull/8) ([@ezrabrilliant](https://github.com/ezrabrilliant)), which upstream hasn't released yet.
+
+### Added
+- The card's large image rotates through five Clawd pictures (working, coffee, cooking, headphones, wizard), each with its own hover text
+  - Each image stays for 15 seconds; set `CC_DISCORD_ROTATE_SECONDS` to change it (5 seconds at least, because of Discord's rate limit on activity updates)
+  - The images are in `assets/clawd/` and are served from this fork's `main` branch, because Discord shows external images only from a URL
+
 ### Fixed
 - `start.sh` and `stop.sh`, which the plugin hooks run on every platform (Windows included, through Git Bash), trust the pid file only when that pid is a `cc-discord-presence` process, as `start.ps1` and `stop.ps1` do since 1.0.6
   - A pid reused after the daemon exited (reboot, Discord not running) made `start.sh` report the daemon as running without starting it, and `stop.sh` force-stop the unrelated program
@@ -113,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic binary download on first run
 - GitHub Actions workflow for automated releases
 
-[Unreleased]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.0.6...v1.1.0
 [1.0.6]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.3...v1.0.4

@@ -37,7 +37,33 @@ const (
 	// ExitGrace is how long the daemon outlives the last Claude Code process,
 	// for a terminal closed without its SessionEnd hook.
 	ExitGrace = 30 * time.Second
+
+	// ImageBaseURL serves the card images from this fork's main branch:
+	// Discord shows external images only from a URL it can fetch, and the
+	// shared app's uploaded assets can't be changed from here.
+	ImageBaseURL = "https://raw.githubusercontent.com/FnDXueyi/cc-discord-presence/main/assets/clawd/"
+
+	// DefaultRotateInterval is how long each image stays on the card, unless
+	// CC_DISCORD_ROTATE_SECONDS says otherwise. Discord rate-limits activity
+	// updates (about 5 per 20 seconds), so MinRotateInterval keeps rotation
+	// from crowding out the text updates.
+	DefaultRotateInterval = 15 * time.Second
+	MinRotateInterval     = 5 * time.Second
 )
+
+// cardImage is one picture the card rotates through, with its hover text.
+type cardImage struct {
+	File string
+	Text string
+}
+
+var cardImages = []cardImage{
+	{"working.jpg", "Clawd is working"},
+	{"coffee.jpg", "Clawd is sipping coffee"},
+	{"cooking.jpg", "Clawd is cooking"},
+	{"headphones.jpg", "Clawd is vibing"},
+	{"wizard.jpg", "Clawd is casting spells"},
+}
 
 // modelPrice is a model's list price in dollars per million tokens. Cache
 // writes cost 1.25x the input price (5-minute cache) or 2x (1-hour cache);
@@ -230,6 +256,8 @@ var (
 	currentSource    string
 	nudgeShown       bool
 	lastPresence     string
+	rotateInterval   = DefaultRotateInterval
+	clock            = time.Now
 )
 
 // Where session data came from, in the order readSessionData tries them.
@@ -280,6 +308,9 @@ func main() {
 ║     Clawd Code - Discord Rich Presence                    ║
 ║     Show your Claude Code session on Discord!             ║
 ╚═══════════════════════════════════════════════════════════╝`)
+
+	rotateInterval = rotateIntervalFromEnv(os.Getenv("CC_DISCORD_ROTATE_SECONDS"))
+	fmt.Printf("🖼 Rotating %d images every %s\n", len(cardImages), rotateInterval)
 
 	// Connect to Discord, now or whenever it starts, and again after it
 	// restarts
@@ -731,22 +762,46 @@ func clearPresence() {
 	lastPresence = ""
 }
 
+// rotateIntervalFromEnv turns CC_DISCORD_ROTATE_SECONDS into how long each
+// image stays on the card: DefaultRotateInterval when unset or invalid, and
+// never less than MinRotateInterval.
+func rotateIntervalFromEnv(value string) time.Duration {
+	if value == "" {
+		return DefaultRotateInterval
+	}
+	secs, err := strconv.Atoi(value)
+	if err != nil || secs <= 0 {
+		fmt.Fprintf(os.Stderr, "Ignoring CC_DISCORD_ROTATE_SECONDS=%q: not a positive whole number of seconds\n", value)
+		return DefaultRotateInterval
+	}
+	return max(time.Duration(secs)*time.Second, MinRotateInterval)
+}
+
+// imageAt picks the image on the card at now. It follows the clock instead
+// of keeping state, so the regular poll moves the card on by itself.
+func imageAt(now time.Time) cardImage {
+	slot := now.Unix() / int64(rotateInterval/time.Second)
+	return cardImages[slot%int64(len(cardImages))]
+}
+
 func updatePresence(session *SessionData) {
 	details, state := presenceText(session)
+	image := imageAt(clock())
 
 	// The data files change often (the hooks module writes after every tool
 	// call) and the poll runs every few seconds; only send what Discord
 	// would show differently.
-	key := details + "\n" + state + "\n" + session.StartTime.String()
+	key := details + "\n" + state + "\n" + session.StartTime.String() + "\n" + image.File
 	if key == lastPresence {
 		return
 	}
 
 	if err := discordClient.SetActivity(discord.Activity{
-		Details:   details,
-		State:     state,
-		LargeText: "Clawd Code - Discord Rich Presence for Claude Code",
-		StartTime: &session.StartTime,
+		Details:    details,
+		State:      state,
+		LargeImage: ImageBaseURL + image.File,
+		LargeText:  image.Text,
+		StartTime:  &session.StartTime,
 	}); err != nil && !errors.Is(err, discord.ErrNotConnected) {
 		fmt.Fprintf(os.Stderr, "Error updating presence: %v\n", err)
 		return
