@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Each Clawd picture has hover text that matches it: "Clawd is shipping code 💻", "Clawd is refueling ☕", "Clawd is cooking 🍳", "Clawd is listening 🎧" and "Clawd is casting a bugfix spell 🪄"
 
+### Fixed
+- Sessions starting at the same time could still start a daemon each on systems with uutils coreutils (Ubuntu 26.04), and `start.sh` could exit with an error
+  - `start.sh` used a `mkdir` lock directory, and uutils mkdir 0.10.0 reports success to both of two racing calls
+  - The lock is now a file that bash creates with `O_EXCL` (noclobber). A lock directory left by an older version is removed after a minute, like a stale lock file
+
 ## [1.1.0] - 2026-11-02
 
 Released from the [FnDXueyi fork](https://github.com/FnDXueyi/cc-discord-presence). It includes the fixes from [#8](https://github.com/tsanva/cc-discord-presence/pull/8) ([@ezrabrilliant](https://github.com/ezrabrilliant)), which upstream hasn't released yet.

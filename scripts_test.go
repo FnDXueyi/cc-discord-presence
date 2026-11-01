@@ -519,3 +519,29 @@ func TestStartScriptBreaksLockLeftByKilledScript(t *testing.T) {
 		t.Error("daemon not started")
 	}
 }
+
+// The lock is a file now (uutils mkdir let two racing scripts both take a
+// lock directory); a killed script leaves that behind just the same.
+func TestStartScriptBreaksLockFileLeftByKilledScript(t *testing.T) {
+	h := newScriptHome(t)
+	h.installFakeDaemon()
+	lock := h.claude("discord-presence.lock")
+	if err := os.WriteFile(lock, nil, 0644); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-2 * time.Minute)
+	os.Chtimes(lock, old, old)
+
+	start := time.Now()
+	h.run("start.sh", hookInput(t, "session-a", ""))
+
+	if took := time.Since(start); took > 5*time.Second {
+		t.Errorf("start.sh waited %s on a lock left two minutes ago", took.Round(time.Second))
+	}
+	if !h.daemonRunning(h.pidFile()) {
+		t.Error("daemon not started")
+	}
+	if _, err := os.Stat(lock); !os.IsNotExist(err) {
+		t.Errorf("lock still there after start.sh finished (stat error %v)", err)
+	}
+}

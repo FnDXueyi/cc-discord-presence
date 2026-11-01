@@ -125,20 +125,24 @@ VERSION_FILE="$BINARY.version"
 
 # Sessions starting together (terminals opened at once) would each find no
 # daemon and start one, and only the last would go in the pid file. Checking
-# and starting is done by one script at a time: mkdir is atomic. A lock left
-# by a script that was killed (hook timeout) is broken after a minute.
-LOCK_DIR="$CLAUDE_DIR/discord-presence.lock"
-find "$LOCK_DIR" -maxdepth 0 -mmin +1 -exec rmdir {} \; 2>/dev/null || true
+# and starting is done by one script at a time. The lock is a file created
+# under noclobber, which bash opens with O_EXCL, so exactly one script gets
+# it. mkdir is not enough: uutils mkdir 0.10.0 (Ubuntu 26.04's) reports
+# success to both of two racing calls. A lock left by a script that was
+# killed (hook timeout) is broken after a minute, as is a lock directory
+# left by an older version.
+LOCK_FILE="$CLAUDE_DIR/discord-presence.lock"
+find "$LOCK_FILE" -maxdepth 0 -mmin +1 -exec rm -fd {} \; 2>/dev/null || true
 LOCKED=false
 for _ in $(seq 90); do
-    if mkdir "$LOCK_DIR" 2>/dev/null; then
+    if (set -C; : > "$LOCK_FILE") 2>/dev/null; then
         LOCKED=true
         break
     fi
     sleep 0.1
 done
 if $LOCKED; then
-    trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
+    trap 'rm -f "$LOCK_FILE"' EXIT
 fi
 
 # If the daemon is already running, just exit, unless it runs a binary from
