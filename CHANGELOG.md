@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-02
+
+### Changed
+- Each Clawd picture has hover text that matches it: "Clawd is shipping code 💻", "Clawd is refueling ☕", "Clawd is cooking 🍳", "Clawd is listening 🎧" and "Clawd is casting a bugfix spell 🪄"
+
 ## [1.1.0] - 2026-11-02
 
 Released from the [FnDXueyi fork](https://github.com/FnDXueyi/cc-discord-presence). It includes the fixes from [#8](https://github.com/tsanva/cc-discord-presence/pull/8) ([@ezrabrilliant](https://github.com/ezrabrilliant)), which upstream hasn't released yet.
@@ -123,7 +128,8 @@ Released from the [FnDXueyi fork](https://github.com/FnDXueyi/cc-discord-presenc
 - Automatic binary download on first run
 - GitHub Actions workflow for automated releases
 
-[Unreleased]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/FnDXueyi/cc-discord-presence/compare/v1.0.6...v1.1.0
 [1.0.6]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/tsanva/cc-discord-presence/compare/v1.0.4...v1.0.5

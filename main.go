@@ -58,11 +58,11 @@ type cardImage struct {
 }
 
 var cardImages = []cardImage{
-	{"working.jpg", "Clawd is working"},
-	{"coffee.jpg", "Clawd is sipping coffee"},
-	{"cooking.jpg", "Clawd is cooking"},
-	{"headphones.jpg", "Clawd is vibing"},
-	{"wizard.jpg", "Clawd is casting spells"},
+	{"working.jpg", "Clawd is shipping code 💻"},
+	{"coffee.jpg", "Clawd is refueling ☕"},
+	{"cooking.jpg", "Clawd is cooking 🍳"},
+	{"headphones.jpg", "Clawd is listening 🎧"},
+	{"wizard.jpg", "Clawd is casting a bugfix spell 🪄"},
 }
 
 // modelPrice is a model's list price in dollars per million tokens. Cache
