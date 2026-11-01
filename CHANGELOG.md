@@ -17,6 +17,7 @@ Released from the [FnDXueyi fork](https://github.com/FnDXueyi/cc-discord-presenc
   - The images are in `assets/clawd/` and are served from this fork's `main` branch, because Discord shows external images only from a URL
 
 ### Fixed
+- On macOS and Linux, `stop.sh` without a pid file stopped every process whose command line contained "cc-discord-presence" (the plugin's own folder, `stop.sh` itself, a clone of this repo), not just the daemon; it now matches only the daemon binary in `~/.claude/bin/`
 - `start.sh` and `stop.sh`, which the plugin hooks run on every platform (Windows included, through Git Bash), trust the pid file only when that pid is a `cc-discord-presence` process, as `start.ps1` and `stop.ps1` do since 1.0.6
   - A pid reused after the daemon exited (reboot, Discord not running) made `start.sh` report the daemon as running without starting it, and `stop.sh` force-stop the unrelated program
 - On Windows the daemon's output now reaches `~/.claude/discord-presence.log`, which the README points to; `start.sh` discarded it, so a failed Discord connection left no trace

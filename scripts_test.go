@@ -171,12 +171,21 @@ func (h *scriptHome) daemonRunning(pid int) bool {
 // still alive.
 func startUnrelatedProcess(t *testing.T) (pid int, alive func() bool) {
 	t.Helper()
+	return startUnrelatedProcessIn(t, t.TempDir())
+}
+
+// startUnrelatedProcessIn is startUnrelatedProcess with the program in dir.
+func startUnrelatedProcessIn(t *testing.T, dir string) (pid int, alive func() bool) {
+	t.Helper()
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	src, _ := os.Executable()
 	name := "unrelated"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
-	exe := filepath.Join(t.TempDir(), name)
+	exe := filepath.Join(dir, name)
 	copyFile(t, src, exe)
 
 	cmd := exec.Command(exe)
@@ -410,6 +419,20 @@ func TestStopScriptSparesProcessThatReusedDaemonPid(t *testing.T) {
 
 	if !alive() {
 		t.Errorf("stop.sh killed pid %d, which is not the daemon", pid)
+	}
+}
+
+// Without a pid file stop.sh stops the daemon by name. On macOS and Linux it
+// matched every command line containing "cc-discord-presence": a clone of
+// this repo, the plugin's own folder (stop.sh included) and this test binary.
+func TestStopScriptFallbackSparesOtherProcessesNamedLikeThePlugin(t *testing.T) {
+	h := newScriptHome(t)
+	pid, alive := startUnrelatedProcessIn(t, filepath.Join(t.TempDir(), "cc-discord-presence"))
+
+	h.run("stop.sh", "")
+
+	if !alive() {
+		t.Errorf("stop.sh killed pid %d, which runs from a cc-discord-presence folder but is not the daemon", pid)
 	}
 }
 

@@ -162,6 +162,8 @@ else
     if $IS_WINDOWS; then
         taskkill //F //IM "cc-discord-presence-windows-amd64.exe" >/dev/null 2>&1 || true
     else
-        pkill -f cc-discord-presence 2>/dev/null || true
+        # Match the daemon's own path: a bare "cc-discord-presence" also
+        # matches this script (it runs from the plugin's folder of that name)
+        pkill -f "$CLAUDE_DIR/bin/cc-discord-presence-" 2>/dev/null || true
     fi
 fi
